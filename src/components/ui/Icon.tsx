@@ -24,6 +24,8 @@ const PATHS = {
   // Shield: the client-confirmed equipment guarantee on Home. Insurance and licensing would use it too,
   // but they are unconfirmed, so they only appear beside a placeholder.
   shield: "M12 3l8 3v6c0 5-4 8-8 9-4-1-8-4-8-9V6z",
+  // Instagram: square frame, lens, and flash dot (a small square, since butt caps drop a zero-length line).
+  instagram: "M3 3h18v18H3zM12 8a4 4 0 100 8 4 4 0 000-8zM16.5 6.5h1v1h-1z",
 } as const;
 
 export type IconName = keyof typeof PATHS;

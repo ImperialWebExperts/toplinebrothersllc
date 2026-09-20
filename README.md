@@ -66,7 +66,7 @@ src/
                   /contact/thanks, the 404, sitemap, robots, llms.txt, and api/quote
   components/
     layout/       Header, MobileNav, NavLink, Footer, ClosingCTA
-    ui/           Button, Section, Container, Card, FAQ, Logo, Steps, Icon, TrustStrip, Placeholder
+    ui/           Button, Section, Container, Card, FAQ, Logo, Steps, Icon, TrustStrip
     forms/        QuoteForm
     seo/          JsonLd
   lib/
@@ -87,8 +87,8 @@ Colors, type, and components follow `DESIGN.md`. Colors are theme tokens in `src
 ## Content rules
 
 - Only confirmed facts go on the site: no invented phone numbers, prices, reviews, licenses, or years in business. `CLAUDE.md` lists what is confirmed.
-- Unknown details use the `Placeholder` component, which renders `[PLACEHOLDER: label]`. None are on the site right now.
-- Confirm the sitemap and pages contain no `[PLACEHOLDER: ...]` text before launch, since it would be indexed.
+- Unknown details are left off the site, not filled in. There is no placeholder component; `CITIES` in `src/lib/site.ts` is the one list still awaiting client confirmation.
+- Before launch, confirm no `[PLACEHOLDER: ...]` text appears in any page or in the sitemap, since it would be indexed.
 
 ## Before adding or changing pages
 

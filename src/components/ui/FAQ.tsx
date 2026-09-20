@@ -3,9 +3,8 @@ import Icon from "@/components/ui/Icon";
 import { faqSchema } from "@/lib/schema";
 
 /**
- * `a` is a string for a confirmed answer. For an unknown one, pass a
- * <Placeholder>. Only string answers are emitted in the FAQPage JSON-LD, so
- * placeholder text never reaches structured data.
+ * `a` is a string for a confirmed answer. Only string answers are emitted in the
+ * FAQPage JSON-LD, so a ReactNode answer stays out of structured data.
  */
 export type FaqItem = { q: string; a: React.ReactNode };
 

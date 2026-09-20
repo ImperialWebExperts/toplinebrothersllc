@@ -1,7 +1,8 @@
 import Link from "next/link";
 import Container from "@/components/ui/Container";
+import Icon from "@/components/ui/Icon";
 import Logo from "@/components/ui/Logo";
-import { NAV, SITE } from "@/lib/site";
+import { NAV, SITE, SOCIAL } from "@/lib/site";
 
 const linkClass = "inline-flex min-h-12 items-center text-inverse-ink hover:underline underline-offset-[3px]";
 const headingClass = "type-body-strong mb-2 text-inverse-ink";
@@ -36,6 +37,12 @@ export default function Footer() {
             <h2 className={`${headingClass} mt-6`}>Contact</h2>
             <a href={`mailto:${SITE.email}`} className={`${linkClass} underline`}>
               {SITE.email}
+            </a>
+            <h2 className={`${headingClass} mt-6`}>Social</h2>
+            <a href={SOCIAL.instagram} target="_blank" rel="noopener noreferrer" className={`${linkClass} gap-3`}>
+              <Icon name="instagram" />
+              Instagram
+              <span className="sr-only"> (opens in a new tab)</span>
             </a>
           </div>
         </div>

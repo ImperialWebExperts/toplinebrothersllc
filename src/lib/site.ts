@@ -11,6 +11,10 @@ export const SITE = {
   audience: "Contractors, tradesmen, and property owners",
 } as const;
 
+export const SOCIAL = {
+  instagram: "https://www.instagram.com/toplinebrothersllc/",
+} as const;
+
 export type NavLink = { label: string; href: string };
 
 export const NAV: readonly NavLink[] = [

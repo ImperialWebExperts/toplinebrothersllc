@@ -2,14 +2,13 @@ import Icon, { type IconName } from "@/components/ui/Icon";
 
 export type TrustPoint = {
   icon: IconName;
-  /** A confirmed fact, or a <Placeholder> for a point the client has not confirmed yet. */
+  /** A confirmed fact only. */
   label: React.ReactNode;
   detail?: React.ReactNode;
 };
 
 /**
- * 3-4 trust points. Only shows facts the client can prove: an unconfirmed point passes a
- * <Placeholder> as its label, never an invented claim.
+ * 3-4 trust points. Only shows facts the client can prove, never an invented claim.
  * Icon above a body-strong label and one body-sm line, columns split by 1px hairlines.
  * Place it inside a Container; it is a soft surface block, not a full-bleed band.
  */
