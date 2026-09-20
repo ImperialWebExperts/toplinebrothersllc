@@ -5,7 +5,7 @@ import { useState } from "react";
 import { flushSync } from "react-dom";
 import Button from "@/components/ui/Button";
 import Icon from "@/components/ui/Icon";
-import { CATEGORY_SLUGS, CITY_SLUGS, REQUIRED_FIELDS, fieldError, type Fields } from "@/lib/quote";
+import { CATEGORY_SLUGS, CITY_SLUGS, REQUIRED_FIELDS, fieldError, todayPacific, type Fields } from "@/lib/quote";
 import { CATEGORIES, CITIES, SITE } from "@/lib/site";
 
 type Errors = Partial<Record<keyof Fields, string>>;
@@ -169,7 +169,7 @@ export default function QuoteForm() {
       <div className="grid gap-6 sm:grid-cols-2">
         <div>
           <label htmlFor="start" className={labelCls}>Rental start date</label>
-          <input id="start" type="date" required className={fieldCls} value={values.start}
+          <input id="start" type="date" required min={todayPacific()} className={fieldCls} value={values.start}
             onChange={(e) => set("start", e.target.value)} {...aria("start")} />
           {err("start")}
         </div>

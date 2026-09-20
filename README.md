@@ -1,36 +1,108 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# Top Line Brothers LLC website
 
-## Getting Started
+Marketing website for Top Line Brothers LLC, a California equipment rental company serving the Imperial Valley. It rents power tools and access equipment to contractors, tradesmen, and property owners. The site's job is to turn visitors into quote requests.
 
-First, run the development server:
+Live at <https://toplinebrothersllc.vercel.app>.
+
+## Stack
+
+Next.js (App Router), React, TypeScript (strict), Tailwind CSS v4. All pages are statically generated. The only server code is the quote API route. There are no UI libraries and no images beyond the logo.
+
+## Getting started
+
+Requires Node.js 20 or newer.
 
 ```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
+npm install
+npm run dev        # http://localhost:3000
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+```bash
+npm run lint       # must pass with no errors
+npx tsc --noEmit   # type check
+npm run build      # production build, must pass with no errors
+npm run start      # serve the production build
+```
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+## Environment variables
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+Copy the names below into `.env` locally (it is gitignored) and into the Vercel project settings for production.
 
-## Learn More
+| Variable | Required | Purpose |
+|---|---|---|
+| `SMTP_USER` | One of the two mail options | A Gmail address the site sends from (see Quote email delivery). |
+| `SMTP_PASS` | With `SMTP_USER` | That Gmail account's App Password, not its normal password. |
+| `RESEND_API_KEY` | One of the two mail options | Sends through Resend instead. Used only when `SMTP_USER` and `SMTP_PASS` are not both set. |
+| `QUOTE_FROM_EMAIL` | No | Resend sender on a verified domain. Defaults to `onboarding@resend.dev`. Only needed with a custom domain. |
+| `QUOTE_TO_EMAIL` | No, testing only | Overrides the recipient (default: the business email in `src/lib/site.ts`). Leave it unset in production. |
+| `NEXT_PUBLIC_SITE_URL` | If the domain changes | Overrides the production URL used for canonicals, the sitemap, Open Graph, JSON-LD, and `llms.txt`. |
 
-To learn more about Next.js, take a look at the following resources:
+If no mail option is configured, the form shows its error state with a `mailto:` fallback.
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+### Quote email delivery
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+`src/lib/mail.ts` emails each quote request to the business email in `SITE.email`. The site has no custom domain, so it uses one of two options.
 
-## Deploy on Vercel
+**Gmail SMTP (preferred).** The site logs in to a Gmail account you control and sends from it. No domain is needed and the business inbox does not have to be involved.
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+1. On the sending Gmail account, turn on 2-Step Verification (myaccount.google.com/security).
+2. Create an App Password at myaccount.google.com/apppasswords. Google shows 16 characters, with or without spaces.
+3. Set `SMTP_USER` (the Gmail address) and `SMTP_PASS` (the App Password) locally and in Vercel, then redeploy.
+4. Submit a real request on the deployed site and confirm it arrives. Reply goes to the customer when they gave an email.
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+Requests depend on that Gmail account: if its password changes or the App Password is revoked, sending stops until a new one is set. Gmail allows roughly 500 sent emails a day.
+
+**Resend.** Without a verified domain, Resend only delivers from `onboarding@resend.dev` to the address that owns the Resend account, and a `*.vercel.app` address cannot be verified. So the Resend account must be registered under `SITE.email`: sign up with that address, create a "Sending access" key, and set it as `RESEND_API_KEY`. Mark the first email "Not spam" if Gmail filters it. If a custom domain is added later, verify it in Resend and set `QUOTE_FROM_EMAIL`.
+
+### Spam protection
+
+The quote form has a hidden honeypot field, and `/api/quote` validates every field again on the server. The route also allows 5 requests per IP address every 10 minutes (`src/lib/rateLimit.ts`). The counters live in server memory, so on Vercel each warm instance counts separately. For a hard limit, add a rate-limit rule for `/api/quote` under Vercel > Firewall.
+
+## Project structure
+
+```
+src/
+  app/            Routes: /, /how-renting-works, /service-area, /about, /contact,
+                  /contact/thanks, the 404, sitemap, robots, llms.txt, and api/quote
+  components/
+    layout/       Header, MobileNav, NavLink, Footer, ClosingCTA
+    ui/           Button, Section, Container, Card, FAQ, Logo, Steps, Icon, TrustStrip, Placeholder
+    forms/        QuoteForm
+    seo/          JsonLd
+  lib/
+    site.ts       Single source of truth: name, email, URL, nav, cities, categories, CTA labels
+    quote.ts      Quote form validation, shared by the form and the API route
+    rateLimit.ts  Per-IP limiter for the API route
+    schema.ts     JSON-LD builders
+    seo.ts        Page metadata, Open Graph and Twitter tags
+public/brand/     Logo files and the link-preview image
+```
+
+Business facts (name, email, cities, nav, calls to action, domain) live only in `src/lib/site.ts`. Change them there and nowhere else.
+
+## Design
+
+Colors, type, and components follow `DESIGN.md`. Colors are theme tokens in `src/app/globals.css` (`bg-canvas`, `text-ink-muted`, and so on), never hex values in components. Yellow is used for the quote button and nothing else.
+
+## Content rules
+
+- Only confirmed facts go on the site: no invented phone numbers, prices, reviews, licenses, or years in business. `CLAUDE.md` lists what is confirmed.
+- Unknown details use the `Placeholder` component, which renders `[PLACEHOLDER: label]`. None are on the site right now.
+- Confirm the sitemap and pages contain no `[PLACEHOLDER: ...]` text before launch, since it would be indexed.
+
+## Before adding or changing pages
+
+- Use `pageMetadata()` from `src/lib/seo.ts` for title, canonical, Open Graph, and Twitter tags.
+- Add new indexable routes to `INDEXABLE_ROUTES` in `src/lib/site.ts`, or the sitemap will not list them.
+- Keep `useSearchParams` inside a `<Suspense>` boundary, or `next build` fails.
+- Check pages at 375px, 768px, and 1280px widths.
+
+## Launch checklist
+
+These need the client or an account, so they cannot be done from code.
+
+1. Set up quote email (Gmail SMTP or Resend, see above) and test a real quote request on the deployed site.
+2. Verify the site in Google Search Console and Bing Webmaster Tools, then submit `/sitemap.xml`.
+3. Create a Google Business Profile (as a service-area business), Bing Places, and Apple Business Connect, using only confirmed details.
+4. When confirmed, add `telephone`, `openingHours`, and `address` to `localBusinessSchema()` in `src/lib/schema.ts`, and `sameAs` once profiles exist.
+5. Run the Rich Results Test and validator.schema.org on the live URL.

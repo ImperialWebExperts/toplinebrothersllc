@@ -40,6 +40,17 @@ const US_PHONE = /^1?[2-9]\d{2}[2-9]\d{6}$/;
 
 export const isEmail = (value: string) => EMAIL.test(value.trim());
 
+// The business is in California, so "today" is the Pacific date, on the form and on the server alike.
+// en-CA formats as YYYY-MM-DD, the same shape a date input produces.
+export const todayPacific = () =>
+  new Intl.DateTimeFormat("en-CA", { timeZone: "America/Los_Angeles" }).format(new Date());
+
+function isRealDate(value: string) {
+  if (!/^\d{4}-\d{2}-\d{2}$/.test(value)) return false;
+  const date = new Date(`${value}T00:00:00Z`);
+  return !Number.isNaN(date.getTime()) && date.toISOString().slice(0, 10) === value;
+}
+
 function isPhone(value: string) {
   if (!/^\+?[\d\s().-]+$/.test(value)) return false; // digits and phone punctuation only, no letters
   const digits = value.replace(/\D/g, "");
@@ -62,7 +73,9 @@ export function fieldError(key: keyof Fields, raw: string): string | undefined {
     case "need":
       return value ? undefined : "Tell us what equipment the job needs.";
     case "start":
-      return value ? undefined : "Choose a rental start date.";
+      if (!value) return "Choose a rental start date.";
+      if (!isRealDate(value)) return "Enter a valid start date.";
+      return value < todayPacific() ? "Choose today or a later date." : undefined;
     case "length":
       return value ? undefined : "Enter how long you need the rental, like 3 days.";
     case "city":

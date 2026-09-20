@@ -12,8 +12,6 @@ const eslintConfig = defineConfig([
     "out/**",
     "build/**",
     "next-env.d.ts",
-    // Design handoff, ported into src/ page by page. Delete with the folder.
-    "handoff/**",
   ]),
 ]);
 

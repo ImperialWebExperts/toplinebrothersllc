@@ -4,7 +4,7 @@ Marketing website for Top Line Brothers LLC, a new California equipment rental c
 
 ## Current phase
 
-**Phase 2: `DESIGN.md` applied.** Tokens, fonts, and components follow `DESIGN.md` exactly. Do not introduce colors, fonts, radii, or shadows outside it. Structure is the Phase 1 structure, plus the components `DESIGN.md` adds (utility bar, trust strip, category tiles). Yellow is the quote button and nothing else.
+**Phase 4: launch checks.** Phases 1-3 are done: `DESIGN.md` is applied and the client has confirmed the copy on the site. Tokens, fonts, and components follow `DESIGN.md` exactly. Do not introduce colors, fonts, radii, or shadows outside it. Structure is the Phase 1 structure, plus the components `DESIGN.md` adds (utility bar, trust strip, category tiles). Yellow is the quote button and nothing else.
 
 Phases, in order (update the line above when the phase changes):
 1. Grayscale wireframe, reviewed and approved by the client
@@ -16,8 +16,8 @@ Phases, in order (update the line above when the phase changes):
 
 The SEO plumbing is built; these steps need the domain or the client and cannot be done from code.
 
-1. Set the real domain: `NEXT_PUBLIC_SITE_URL` at build time, or the fallback in `lib/site.ts`. Canonicals, sitemap, Open Graph, `llms.txt` and JSON-LD all follow it. Until then every URL points at `example.com`, so nothing is indexable.
-2. Replace the Gmail address in `SITE.email` with a domain email.
+1. Domain: the site URL is `https://toplinebrothersllc.vercel.app` (the fallback in `lib/site.ts`). If a custom domain replaces it, set `NEXT_PUBLIC_SITE_URL` at build time or edit the fallback. Canonicals, sitemap, Open Graph, `llms.txt` and JSON-LD all follow it.
+2. Set up quote email (Gmail SMTP or a Resend account under `SITE.email`; see `README.md`) in Vercel and test a real quote request. No custom domain is planned, so the Gmail address stays.
 3. Verify the site in Google Search Console and Bing Webmaster Tools, then submit `/sitemap.xml`.
 4. Create Google Business Profile (as a service-area business), Bing Places, and Apple Business Connect, using only confirmed details.
 5. When confirmed, add `telephone`, `openingHours`, and `address` (if there is one) to `localBusinessSchema()`, and `sameAs` once profiles exist. The code comment in `lib/schema.ts` lists them.
@@ -40,6 +40,9 @@ The SEO plumbing is built; these steps need the domain or the client and cannot 
   - Delivery to the job site and customer pickup are both offered, with one flat delivery fee across the Imperial Valley.
   - Rentals by the hour, day, week, or month. Payment by cash, card, or online.
   - A deposit on every rental, a late fee for late returns, and a penalty fee for damaged equipment. No amounts are stated.
+  - The Guarantee's detail line: "Tested for performance so your job stays on schedule without downtime."
+  - Rental terms are adjustable, and a rental can be extended. The customer chooses the delivery and pickup times. At the end of a rental the customer drops the equipment off, or the company collects it.
+  - The customer brings a government-issued photo ID.
 
 ## Hard rules
 
@@ -48,7 +51,7 @@ The SEO plumbing is built; these steps need the domain or the client and cannot 
 3. **No photos or stock imagery.** The client does not want images. The only image assets are `logo_black.png` and `logo_white.png` in `public/brand/`, plus the browser and link-preview images derived from the logo (`app/favicon.ico`, `app/icon.png`, `app/apple-icon.png`, `public/brand/og-image.png`). Those are the badge on white and never appear on a page. Everything else is type, borders, surfaces, and inline SVG icons. Do not add illustrations, gradients, or patterns to compensate.
 4. **Legal text is not yours to finalize.** The site has no legal pages (see the dropped routes under Sitemap and funnel). Do not write binding terms, liability language, deposit amounts, or fee schedules.
 5. **Omit unconfirmed schema properties.** Leave `telephone`, `address`, and `openingHours` out of JSON-LD until the client confirms them. Leave a code comment noting what to add.
-6. **Ask before adding dependencies** beyond Next.js, React, TypeScript, and Tailwind. `lucide-react` is the only pre-approved extra, and only if inline SVGs are not enough.
+6. **Ask before adding dependencies** beyond Next.js, React, TypeScript, and Tailwind. `lucide-react` is the only pre-approved extra, and only if inline SVGs are not enough. `nodemailer` was approved for Gmail SMTP in `lib/mail.ts`.
 
 ## Stack
 
@@ -85,11 +88,14 @@ src/
     favicon.ico  icon.png  apple-icon.png    derived from the logo
   components/
     layout/   Header, MobileNav, NavLink, Footer, ClosingCTA
-    ui/       Button, Section, Container, Card, Placeholder, FAQ, Logo, Steps, Checklist, Icon, TrustStrip
+    ui/       Button, Section, Container, Card, Placeholder, FAQ, Logo, Steps, Icon, TrustStrip
     forms/    QuoteForm
     seo/      JsonLd
   lib/
     site.ts                  single source of truth (see below)
+    quote.ts                 quote form validation, shared by QuoteForm and /api/quote
+    mail.ts                  sends the quote email (Gmail SMTP or Resend)
+    rateLimit.ts             per-IP limiter for /api/quote
     schema.ts                JSON-LD builders
     seo.ts                   pageMetadata (title, canonical, Open Graph, Twitter), share image, title template
 public/brand/                logo_black.png, logo_white.png, og-image.png
@@ -124,7 +130,7 @@ Funnel rules:
 - Every page has one obvious next step, using the primary button style, identically everywhere.
 - The quote form stays short: name, phone or email, equipment category, what they need, dates, job site city, delivery or pickup. Do not add fields without asking.
 - The equipment category and city are prefilled from `?category=` and `?city=` query params.
-- Form submit POSTs to `src/app/api/quote/route.ts`, which validates again and emails the request to `SITE.email` through Resend's REST API (plain `fetch`, no SDK). It needs `RESEND_API_KEY` (and optionally `QUOTE_FROM_EMAIL`, default `onboarding@resend.dev`, which only delivers to the Resend account owner until a domain is verified). On success the user goes to `/contact/thanks`; on failure the form stays put and shows a `mailto:` fallback. Validation rules shared by form and route live in `lib/quote.ts`.
+- Form submit POSTs to `src/app/api/quote/route.ts`, which validates again and emails the request to `SITE.email` through `lib/mail.ts`. With no custom domain there are two transports: Gmail SMTP through `nodemailer` (`SMTP_USER` + `SMTP_PASS`, an App Password; takes priority when set), or Resend's REST API (`RESEND_API_KEY`, plain `fetch`), which without a verified domain only delivers to the Resend account owner, so that account must be registered under `SITE.email`. `QUOTE_TO_EMAIL` overrides the recipient for testing and must be unset at launch. The route rate-limits by IP (5 requests per 10 minutes, in memory, so best-effort on a serverless host), and the start date must be today or later, Pacific time. On success the user goes to `/contact/thanks`; on failure the form stays put and shows a `mailto:` fallback. Validation rules shared by form and route live in `lib/quote.ts`.
 
 ## SEO, AEO, and GEO
 
@@ -176,7 +182,7 @@ Do not guess any of these. Use placeholders.
 - Concrete tool types beyond the three chips per tile on Home (those are client-supplied; do not add more)
 - Whether the client wants an `/equipment` page at all once inventory is known
 - Provable trust facts: insurance, licensing, locally owned
-- Domain name (also needed to replace the Gmail address with a domain email). The owner will supply it; see the Phase 4 SEO checklist
+- A custom domain. The owner does not plan to buy one, so the site stays on `toplinebrothersllc.vercel.app`, the Gmail address stays, and quote email is sent through Gmail SMTP or a Resend account registered under `SITE.email`
 - Rental term details: deposit amount, late and damage fee amounts, cancellation, liability. The site states only that a deposit and fees apply
 - Owner names and roles for the About page
 

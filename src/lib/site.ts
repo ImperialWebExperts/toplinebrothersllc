@@ -2,10 +2,9 @@ export const SITE = {
   name: "Top Line Brothers LLC",
   shortName: "Top Line Brothers",
   email: "toplinebrothersllc@gmail.com",
-  // TODO: replace with the real production domain once registered. Until then set
-  // NEXT_PUBLIC_SITE_URL at build time, or edit the fallback here. Canonicals, sitemap,
-  // Open Graph and JSON-LD all read this one value.
-  url: (process.env.NEXT_PUBLIC_SITE_URL ?? "https://example.com").replace(/\/$/, ""),
+  // Production URL. If a custom domain replaces it, set NEXT_PUBLIC_SITE_URL at build time or edit
+  // the fallback here. Canonicals, sitemap, Open Graph, llms.txt and JSON-LD all read this one value.
+  url: (process.env.NEXT_PUBLIC_SITE_URL ?? "https://toplinebrothersllc.vercel.app").replace(/\/$/, ""),
   description:
     "Top Line Brothers LLC rents power tools and access equipment to contractors, tradesmen, and property owners across the Imperial Valley and surrounding areas.",
   region: "Imperial Valley",

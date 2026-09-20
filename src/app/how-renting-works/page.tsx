@@ -61,10 +61,10 @@ export default function HowRentingWorksPage() {
         <h2 className="sr-only">Rental basics</h2>
         <ul className="grid gap-6 md:grid-cols-2">
           {[
-            { t: "Rental periods", p: "hourly / daily / weekly / monthly terms" },
-            { t: "Delivery and pickup", p: `One flat delivery fee applies across the ${SITE.region}. You choose the delivery and pickup times.` },
-            { t: "Deposits and payment", p: "We accept cash, card, and online payments" },
-            { t: "Returns and late returns", p: "A late fee will be applied for any late returns." },
+            { t: "Rental periods", p: "Rent by the hour, day, week, or month. Terms are adjustable, so tell us how long you need it." },
+            { t: "Delivery and pickup", p: `We deliver to your job site, or you can pick up. One flat delivery fee applies across the ${SITE.region}. You choose the delivery and pickup times.` },
+            { t: "Deposits and payment", p: "Every rental requires a deposit. We accept cash, card, and online payments." },
+            { t: "Late returns and damage", p: "We charge a late fee for late returns and a penalty fee for damaged equipment." },
           ].map((b) => (
             <li key={b.t}>
               <Card className="h-full">

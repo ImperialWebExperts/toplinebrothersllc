@@ -7,15 +7,14 @@ import {
   isEmail,
   type Fields,
 } from "@/lib/quote";
-import { CATEGORIES, CITIES, SITE } from "@/lib/site";
+import { sendQuoteEmail } from "@/lib/mail";
+import { clientKey, rateLimit } from "@/lib/rateLimit";
+import { CATEGORIES, CITIES } from "@/lib/site";
 
-// Emails each quote request to SITE.email through Resend's REST API (plain fetch, no SDK).
-// Env: RESEND_API_KEY (required), QUOTE_FROM_EMAIL (optional). Until a domain is verified in Resend,
-// the default onboarding@resend.dev sender can only deliver to the address that owns the Resend account.
-const RESEND_URL = "https://api.resend.com/emails";
-const DEFAULT_FROM = "onboarding@resend.dev";
-
-const json = (body: { ok: boolean }, status: number) => Response.json(body, { status });
+// Validates a quote request and emails it to the business. Transport, env vars and failure logging
+// are in lib/mail.ts.
+const json = (body: { ok: boolean }, status: number, headers?: HeadersInit) =>
+  Response.json(body, { status, headers });
 
 const isRecord = (value: unknown): value is Record<string, unknown> =>
   typeof value === "object" && value !== null && !Array.isArray(value);
@@ -50,6 +49,10 @@ function parse(payload: unknown): Fields | null {
 }
 
 export async function POST(request: Request) {
+  // Counts every request, honeypot hits included, before any work is done.
+  const limit = rateLimit(clientKey(request));
+  if (!limit.ok) return json({ ok: false }, 429, { "Retry-After": String(limit.retryAfterSeconds) });
+
   let payload: unknown;
   try {
     payload = await request.json();
@@ -64,12 +67,6 @@ export async function POST(request: Request) {
 
   const fields = parse(payload);
   if (!fields) return json({ ok: false }, 400);
-
-  const apiKey = process.env.RESEND_API_KEY;
-  if (!apiKey) {
-    console.error("Quote request not sent: RESEND_API_KEY is not set.");
-    return json({ ok: false }, 500);
-  }
 
   const categoryLabel = CATEGORIES.find((c) => c.slug === fields.category)?.label ?? fields.category;
   const cityLabel = fields.city === "other" ? "Other / nearby" : CITIES.find((c) => c.slug === fields.city)?.name ?? fields.city;
@@ -89,29 +86,13 @@ export async function POST(request: Request) {
     fields.need,
   ].join("\n");
 
-  let response: Response;
-  try {
-    response = await fetch(RESEND_URL, {
-      method: "POST",
-      headers: { Authorization: `Bearer ${apiKey}`, "Content-Type": "application/json" },
-      body: JSON.stringify({
-        from: process.env.QUOTE_FROM_EMAIL ?? DEFAULT_FROM,
-        to: [SITE.email],
-        subject,
-        text,
-        // Only when they gave an email, so Reply goes to the customer.
-        ...(isEmail(fields.contact) ? { reply_to: fields.contact } : {}),
-      }),
-    });
-  } catch {
-    console.error("Quote request not sent: could not reach Resend.");
-    return json({ ok: false }, 502);
-  }
-
-  if (!response.ok) {
-    // Status only. The body and the request both contain customer details.
-    console.error(`Quote request not sent: Resend responded ${response.status}.`);
-    return json({ ok: false }, 502);
-  }
+  const result = await sendQuoteEmail({
+    subject,
+    text,
+    // Only when they gave an email, so Reply goes to the customer.
+    replyTo: isEmail(fields.contact) ? fields.contact : undefined,
+  });
+  if (result === "not_configured") return json({ ok: false }, 500);
+  if (result === "failed") return json({ ok: false }, 502);
   return json({ ok: true }, 200);
 }
