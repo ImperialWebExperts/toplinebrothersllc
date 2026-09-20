@@ -1,0 +1,217 @@
+@import "tailwindcss";
+
+/*
+ * Phase 2 tokens, straight from DESIGN.md. Colors are only ever used through these names
+ * (bg-canvas, text-ink-muted, border-hairline...). Never a hex value in a component.
+ * Spacing uses Tailwind's 4px scale, which is DESIGN.md's scale (p-1 = 4px ... p-24 = 96px).
+ */
+@theme {
+  --color-primary: #ffc400;
+  --color-primary-hover: #e6b000;
+  --color-primary-pressed: #cc9c00;
+  --color-on-primary: #000000;
+  --color-ink: #000000;
+  --color-ink-muted: #525252;
+  --color-ink-subtle: #8c8c8c;
+  --color-canvas: #ffffff;
+  --color-surface-1: #f4f4f4;
+  --color-surface-2: #e0e0e0;
+  --color-hairline: #cacacb;
+  --color-hairline-soft: #e0e0e0;
+  --color-inverse-canvas: #000000;
+  --color-inverse-surface: #262626;
+  --color-inverse-ink: #ffffff;
+  --color-inverse-ink-muted: #c6c6c6;
+  --color-inverse-hairline: #4b4b4b;
+  --color-success: #007d48;
+  --color-error: #da1e28;
+
+  --font-display: var(--font-display-src), "Arial Black", system-ui, sans-serif;
+  --font-text: var(--font-text-src), Inter, system-ui, sans-serif;
+
+  --radius-sm: 4px;
+
+  /* The only shadow in the system: overlays that float over content (mobile nav drawer). */
+  --shadow-overlay: 0 8px 24px rgba(0, 0, 0, 0.16);
+}
+
+@layer base {
+  html {
+    /* Keeps anchor jumps and focused fields clear of the sticky header. */
+    scroll-padding-top: 6rem;
+  }
+
+  body {
+    font-family: var(--font-text);
+    background-color: var(--color-canvas);
+    color: var(--color-ink);
+    -webkit-font-smoothing: antialiased;
+  }
+
+  h1,
+  h2,
+  h3 {
+    text-wrap: balance;
+    overflow-wrap: break-word;
+  }
+
+  /* Visible focus on every interactive element: 3px ink, 2px offset (white on dark bands). */
+  :focus-visible {
+    outline: 3px solid var(--color-ink);
+    outline-offset: 2px;
+  }
+  .on-dark :focus-visible,
+  .on-dark:focus-visible {
+    outline-color: var(--color-inverse-ink);
+  }
+
+  /* State changes transition color only, 120ms ease-out. */
+  a,
+  button,
+  summary,
+  input,
+  select,
+  textarea {
+    transition-property: color, background-color, border-color, outline-color, text-decoration-thickness;
+    transition-duration: 120ms;
+    transition-timing-function: ease-out;
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    *,
+    *::before,
+    *::after {
+      transition: none !important;
+      animation: none !important;
+      scroll-behavior: auto !important;
+    }
+  }
+}
+
+/*
+ * Type scale (DESIGN.md "Type Scale"). Each role bundles family, size, line height, tracking and
+ * case. Mobile size first, desktop size from 768px up. Display roles use Archivo at 110% width
+ * below 768px and 125% from 768px up.
+ * Roles at weight 400 leave font-weight to the inherited default, so a `font-medium` or
+ * `font-semibold` utility can raise them (FAQ questions, form labels) without a specificity fight.
+ */
+@utility type-display-xl {
+  font-family: var(--font-display);
+  font-weight: 800;
+  font-size: 36px;
+  line-height: 1;
+  letter-spacing: -0.01em;
+  text-transform: uppercase;
+  font-stretch: 110%;
+  @media (min-width: 768px) {
+    font-size: 72px;
+    font-stretch: 125%;
+  }
+}
+
+@utility type-display-lg {
+  font-family: var(--font-display);
+  font-weight: 800;
+  font-size: 32px;
+  line-height: 1.08;
+  letter-spacing: -0.01em;
+  text-transform: uppercase;
+  font-stretch: 110%;
+  @media (min-width: 768px) {
+    font-size: 52px;
+    font-stretch: 125%;
+  }
+}
+
+@utility type-headline {
+  font-family: var(--font-display);
+  font-weight: 700;
+  font-size: 28px;
+  line-height: 1.2;
+  font-stretch: 110%;
+  @media (min-width: 768px) {
+    font-size: 36px;
+    font-stretch: 125%;
+  }
+}
+
+@utility type-numeral {
+  font-family: var(--font-display);
+  font-weight: 800;
+  font-size: 48px;
+  line-height: 1;
+  font-stretch: 110%;
+  @media (min-width: 768px) {
+    font-size: 64px;
+    font-stretch: 125%;
+  }
+}
+
+@utility type-title {
+  font-weight: 600;
+  font-size: 20px;
+  line-height: 1.33;
+  @media (min-width: 768px) {
+    font-size: 24px;
+  }
+}
+
+@utility type-subhead {
+  font-size: 18px;
+  line-height: 1.4;
+  @media (min-width: 768px) {
+    font-size: 20px;
+  }
+}
+
+@utility type-body-lg {
+  font-size: 18px;
+  line-height: 1.5;
+}
+
+@utility type-body {
+  font-size: 16px;
+  line-height: 1.5;
+  letter-spacing: 0.16px;
+}
+
+@utility type-body-strong {
+  font-weight: 600;
+  font-size: 16px;
+  line-height: 1.5;
+  letter-spacing: 0.16px;
+}
+
+@utility type-body-sm {
+  font-size: 14px;
+  line-height: 1.43;
+  letter-spacing: 0.16px;
+}
+
+@utility type-caption {
+  font-size: 12px;
+  line-height: 1.33;
+  letter-spacing: 0.32px;
+}
+
+@utility type-button {
+  font-weight: 600;
+  font-size: 16px;
+  line-height: 1.25;
+}
+
+@utility type-button-lg {
+  font-weight: 600;
+  font-size: 18px;
+  line-height: 1.33;
+}
+
+/* Text link: always underlined, 1px with a 3px offset; thickens to 2px on hover. */
+@utility link {
+  text-decoration-line: underline;
+  text-decoration-thickness: 1px;
+  text-underline-offset: 3px;
+  &:hover {
+    text-decoration-thickness: 2px;
+  }
+}
